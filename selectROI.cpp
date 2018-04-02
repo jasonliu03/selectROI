@@ -16,8 +16,8 @@ using namespace std;
 using namespace cv;  
 
 
-string dir_path = "./src_closeEnv/";  
-string dst_name = "./dst_closeEnv/closeEnv%d.jpg";
+string dir_path = "./src_onlineEnv/";  
+string dst_name = "./dst_onlineEnv/onlineEnv%d.jpg";
 #define INDEX_BEGIN 0; // need consider about pics_skip
 
 // Define our callback which we will install for  
@@ -28,6 +28,7 @@ void my_mouse_callback(
 );  
   
 CvRect box;  
+CvPoint mousePos;
 bool drawing_box = false;  
 bool isRectDrawn = false;  
   
@@ -105,6 +106,8 @@ int main( int argc, char* argv[] ) {
         while( 1 ) {  
             //cvCopyImage( image_copy, temp );  
             cvCopy( image_copy, temp );  
+            cvLine(temp, cvPoint(mousePos.x, 0), cvPoint(mousePos.x, temp->height), CV_RGB(0, 0, 255), 1, 8);  
+            cvLine(temp, cvPoint(0, mousePos.y), cvPoint(temp->width, mousePos.y), CV_RGB(0, 0, 255), 1, 8);  
             if( drawing_box ) draw_box( temp, box );  
             cvShowImage( "Src Image", temp );  
             //if( cvWaitKey( 15 )==27 ) break;  
@@ -156,6 +159,8 @@ int event, int x, int y, int flags, void* param
     IplImage* image_copy = (IplImage*) param;  
     switch( event ) {  
         case CV_EVENT_MOUSEMOVE: {  
+            mousePos.x = x;  
+            mousePos.y = y;  
             if( drawing_box ) {  
                 box.width = x-box.x;  
                 box.height = y-box.y;  
