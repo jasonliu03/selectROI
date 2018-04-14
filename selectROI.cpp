@@ -15,10 +15,13 @@
 using namespace std;
 using namespace cv;  
 
+CvPoint pt1 = cvPoint(0,0);    
+CvPoint pt2 = cvPoint(0,0);
 
-string dir_path = "./src_onlineEnv/";  
-string dst_name = "./dst_onlineEnv/onlineEnv%d.jpg";
-#define INDEX_BEGIN 0; // need consider about pics_skip
+string dir_path = "./src/";  
+string PREFIX = "";
+string dst_name = "./dst/" + PREFIX + "%s";
+string roiFileName = "./roi_fileList.txt";
 
 // Define our callback which we will install for  
 // mouse events.  
@@ -56,15 +59,18 @@ int main( int argc, char* argv[] ) {
     box = cvRect(-1,-1,0,0);  
 
     ifstream infile;
-    infile.open("pics_skip.txt");
-    if(!infile) cout<<"error"<<endl;
+    infile.open(roiFileName.c_str());
+    if(!infile) cout<<"roi file not exist"<<endl;
     string str;
     vector<string> ve;
     vector<string>::iterator it;
     while(getline(infile,str))   //按行读取,遇到换行符结束
     {   
-        ve.push_back(str);
+        char* buf = strdup(str.c_str());    
+        char* tmpstr = strtok(buf, "\t");
+        ve.push_back(tmpstr);
     }
+    infile.close();
     cout << ve.size() << endl;
 
     Directory dir;  
@@ -103,9 +109,21 @@ int main( int argc, char* argv[] ) {
         // display the temp image_copy, and wait 15ms for a keystroke,  
         // then repeat…  
         //  
+
+        char text[80];    
+        CvFont font;    
+        cvInitFont(&font,CV_FONT_HERSHEY_PLAIN,1.0,1.0);
+
+        ofstream of;
+        of.open(roiFileName.c_str(), ios::app);
+        if(!of) cout<<"open file error"<<endl;
         while( 1 ) {  
             //cvCopyImage( image_copy, temp );  
             cvCopy( image_copy, temp );  
+            //cvRectangle(temp,pt1,pt2,cvScalar(255,255,255));
+            sprintf(text,"roi = %d,%d,%d,%d",pt1.x,pt1.y,pt2.x,pt2.y);
+            cvPutText(temp,text,cvPoint(10,20),&font,cvScalar(0,0,255));
+
             cvLine(temp, cvPoint(mousePos.x, 0), cvPoint(mousePos.x, temp->height), CV_RGB(0, 0, 255), 1, 8);  
             cvLine(temp, cvPoint(0, mousePos.y), cvPoint(temp->width, mousePos.y), CV_RGB(0, 0, 255), 1, 8);  
             if( drawing_box ) draw_box( temp, box );  
@@ -120,12 +138,15 @@ int main( int argc, char* argv[] ) {
                     cvCopy( image_copy, image );  
                       
                     // save roi image  
-                    static int index = INDEX_BEGIN;  
                     char save_image_name[128];  
-                    sprintf(save_image_name, dst_name.c_str(), index++);  
+                    sprintf(save_image_name, dst_name.c_str(), fileNames[i].c_str());  
                     cvSetImageROI(image_input, box);  
                     cvSaveImage(save_image_name, image_input);  
                     cvResetImageROI(image_input);  
+
+                    of << PREFIX+fileNames[i] << "\t" << pt1.x << "," << pt1.y << "," << pt2.x << "," << pt2.y << endl;
+                    of.flush();
+                    
   
                     isRectDrawn = false;  
                 }  
@@ -143,6 +164,8 @@ int main( int argc, char* argv[] ) {
         cvReleaseImage( &image_copy );  
         cvReleaseImage( &temp );  
         cvDestroyWindow( "Src Image" );  
+
+        of.close();
     }
 }  
   
@@ -164,10 +187,13 @@ int event, int x, int y, int flags, void* param
             if( drawing_box ) {  
                 box.width = x-box.x;  
                 box.height = y-box.y;  
+                pt2 = cvPoint(x,y); 
             }  
         }  
         break;  
         case CV_EVENT_LBUTTONDOWN: {  
+            pt1 = cvPoint(x,y);    
+            pt2 = cvPoint(x,y); 
             drawing_box = true;  
             box = cvRect(x, y, 0, 0);  
         }  
@@ -175,6 +201,7 @@ int event, int x, int y, int flags, void* param
         case CV_EVENT_LBUTTONUP: {  
             drawing_box = false;  
             isRectDrawn = true;  
+            pt2 = cvPoint(x,y); 
             if(box.width<0) {  
                 box.x+=box.width;  
                 box.width *=-1;  
