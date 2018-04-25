@@ -55,6 +55,10 @@ void draw_box_green( IplImage* img, CvRect box ) {
 }  
   
 int main( int argc, char* argv[] ) {  
+    if(argc == 2)
+    {
+        dir_path = argv[1];
+    }
   
     box = cvRect(-1,-1,0,0);  
 
