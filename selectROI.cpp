@@ -20,7 +20,8 @@ CvPoint pt2 = cvPoint(0,0);
 
 string dir_path = "./src/";  
 string PREFIX = "";
-string dst_name = "./dst/" + PREFIX + "%s";
+string dst_dir = "./dst/";
+string dst_name = dst_dir + PREFIX + "%s";
 string roiFileName = "./roi_fileList.txt";
 
 // Define our callback which we will install for  
@@ -58,6 +59,12 @@ int main( int argc, char* argv[] ) {
     if(argc == 2)
     {
         dir_path = argv[1];
+    }
+    if(argc == 3)
+    {
+        dir_path = argv[1];
+        dst_dir = argv[2];
+        dst_name = dst_dir + PREFIX + "%s";
     }
   
     box = cvRect(-1,-1,0,0);  
@@ -144,6 +151,7 @@ int main( int argc, char* argv[] ) {
                     // save roi image  
                     char save_image_name[128];  
                     sprintf(save_image_name, dst_name.c_str(), fileNames[i].c_str());  
+                    cout << "save to:" << save_image_name << endl;
                     cvSetImageROI(image_input, box);  
                     cvSaveImage(save_image_name, image_input);  
                     cvResetImageROI(image_input);  
